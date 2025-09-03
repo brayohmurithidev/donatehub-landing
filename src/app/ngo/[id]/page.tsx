@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 import CampaignCard from '@/components/cards/CampaignCard';
@@ -26,6 +25,7 @@ import {
 import PageLayout from '@/components/layout/PageLayout';
 import { useTenant } from "@/api/hooks/useTenants";
 import { useGetNGOCampaigns } from "@/api/hooks/useCampaigns";
+import { Campaign } from "@/types";
 
 const NGODetailPage = () => {
   const params = useParams();
@@ -61,15 +61,8 @@ const NGODetailPage = () => {
   }
 
   // Derive campaigns stats
-  const activeCampaigns = (campaigns || []).filter((c: any) => c.status === "active").length;
-  const completedCampaigns = (campaigns || []).filter((c: any) => c.status !== "active").length;
-
-  const formatDate = (dateString: string) =>
-      new Date(dateString).toLocaleDateString("en-US", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
+  const activeCampaigns = (campaigns || []).filter((c: Campaign) => c.status === "active").length;
+  const completedCampaigns = (campaigns || []).filter((c: Campaign) => c.status !== "active").length;
 
   return (
       <PageLayout>
@@ -264,9 +257,29 @@ const NGODetailPage = () => {
                           ))}
                         </>
                       ) : (
-                        campaigns.map((campaign: any) => (
-                            <CampaignCard key={campaign.id} campaign={campaign} />
-                        ))
+                        campaigns.map((campaign: Campaign) => {
+                          // Transform our Campaign type to match CampaignCard's expected interface
+                          const transformedCampaign = {
+                            id: campaign.id,
+                            title: campaign.name,
+                            description: campaign.description,
+                            status: (campaign.status === 'completed' ? 'closed' : campaign.status === 'cancelled' ? 'closed' : 'active') as 'active' | 'closed' | 'urgent',
+                            goal_amount: campaign.goal_amount,
+                            current_amount: campaign.current_amount,
+                            start_date: campaign.start_date,
+                            end_date: campaign.end_date,
+                            image_url: campaign.image_url,
+                            percent_funded: campaign.percentage_funded || 0,
+                            days_left: campaign.days_left || 0,
+                            total_donors: campaign.total_donors || 0,
+                            tenant: {
+                              id: campaign.tenant.id,
+                              name: campaign.tenant.name,
+                              logo_url: campaign.tenant.logo_url
+                            }
+                          };
+                          return <CampaignCard key={campaign.id} campaign={transformedCampaign} />;
+                        })
                       )}
                     </div>
                   </div>
@@ -284,7 +297,7 @@ const NGODetailPage = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-4">No Campaigns Yet</h3>
                     <p className="text-lg text-gray-600 mb-8">
-                      This NGO hasn't launched any campaigns yet. Check back later or contact them directly to learn about upcoming initiatives.
+                      This NGO hasn&apos;t launched any campaigns yet. Check back later or contact them directly to learn about upcoming initiatives.
                     </p>
                     <Button className="bg-primary hover:bg-primary-light text-white px-8 py-3 rounded-xl">
                       Contact NGO

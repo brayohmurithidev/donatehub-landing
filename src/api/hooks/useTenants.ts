@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import API from "@/api/api.ts";
+import API from "@/api/api";
 
 interface Tenant {
     id: string;

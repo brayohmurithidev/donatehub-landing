@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link';
-import {Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, XIcon} from 'lucide-react';
+import {Heart, Mail, Phone, MapPin, Facebook, Instagram, Linkedin, XIcon} from 'lucide-react';
 
 const Footer = () => {
   return (

@@ -1,11 +1,11 @@
-interface CampaignTenant{
+export interface CampaignTenant{
     id: string;
     name: string;
     website: string;
     logo_url: string;
 }
 
-interface Campaign{
+export interface Campaign{
     id: string;
     name: string;
     description: string;
@@ -22,5 +22,4 @@ interface Campaign{
     total_donors?: number;
     total_amount_raised?: number;
     tenant: CampaignTenant;
-
 }

@@ -73,7 +73,7 @@ export interface DonationResponse {
     created_at: string;
   };
   payment_status: "initiated" | "pending" | "failed";
-  payment_data?: any;
+  payment_data?: Record<string, unknown>;
   message: string;
   requires_stripe_payment?: boolean;
 }
@@ -104,7 +104,7 @@ export const useCreateDonation = () => {
       
       console.log('Donation created successfully:', data);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Donation failed:', error);
       
       // You can add toast notifications here
@@ -116,7 +116,7 @@ export const useCreateDonation = () => {
 // Hook for getting donation status
 export const useGetDonationStatus = (donationId: string) => {
   return useMutation({
-    mutationFn: async (): Promise<any> => {
+    mutationFn: async (): Promise<{ status: string; transaction_code?: string }> => {
       const response = await API.get(`/donations/pay/${donationId}/status`);
       return response.data;
     }
@@ -124,18 +124,18 @@ export const useGetDonationStatus = (donationId: string) => {
 };
 
 // Hook for getting payment status with polling
-export const usePollPaymentStatus = (donationId: string, enabled: boolean = false) => {
+export const usePollPaymentStatus = (donationId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (): Promise<any> => {
+    mutationFn: async (): Promise<{ status: string; transaction_code?: string }> => {
       const response = await API.get(`/donations/pay/${donationId}/status`);
       return response.data;
     },
     onSuccess: (data) => {
       // Update the donation in cache if status changes
-      queryClient.setQueryData(['donation', donationId], (old: any) => {
-        if (old) {
+      queryClient.setQueryData(['donation', donationId], (old: unknown) => {
+        if (old && typeof old === 'object' && old !== null) {
           return { ...old, status: data.status, transaction_id: data.transaction_code };
         }
         return old;
@@ -149,18 +149,18 @@ export const useProcessStripePayment = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (payload: { donationId: string; paymentIntent: any }): Promise<any> => {
+    mutationFn: async (payload: { donationId: string; paymentIntent: Record<string, unknown> }): Promise<Record<string, unknown>> => {
       const response = await API.post(`/donations/${payload.donationId}/stripe-payment`, {
         payment_intent: payload.paymentIntent
       });
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       // Invalidate campaigns to refresh amounts
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       console.log('Stripe payment processed successfully:', data);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Stripe payment failed:', error);
     }
   });

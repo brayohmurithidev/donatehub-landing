@@ -6,12 +6,12 @@ import * as Yup from 'yup';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Eye, EyeOff, Mail, Lock, Phone, MapPin, Building, ArrowLeft, CheckCircle, Heart, Upload, Globe, User, ChevronRight, ChevronLeft, AlertCircle, Info } from 'lucide-react';
+
+import { Eye, EyeOff, Mail, Lock, Phone, MapPin, Building, ArrowLeft, CheckCircle, Upload, Globe, User, ChevronRight, ChevronLeft, AlertCircle, Info } from 'lucide-react';
 
 // Step-specific validation schemas
 const step2Schema = Yup.object().shape({
@@ -92,7 +92,7 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
-  const [stepErrors, setStepErrors] = useState<{[key: string]: any}>({});
+  const [stepErrors, setStepErrors] = useState<{[key: string]: string}>({});
 
   const totalSteps = 5;
 
@@ -118,7 +118,7 @@ const RegisterPage = () => {
 
 
 
-  const validateStep = async (step: number, values: any) => {
+  const validateStep = async (step: number, values: Record<string, unknown>) => {
     let schema;
     switch (step) {
       case 2:
@@ -141,19 +141,21 @@ const RegisterPage = () => {
       await schema.validate(values, { abortEarly: false });
       setStepErrors({}); // Clear errors if validation passes
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errors: {[key: string]: string} = {};
-      err.inner.forEach((error: any) => {
-        if (error.path) {
-          errors[error.path] = error.message;
-        }
-      });
+      if (err && typeof err === 'object' && 'inner' in err && Array.isArray(err.inner)) {
+        err.inner.forEach((error: { path?: string; message?: string }) => {
+          if (error.path && error.message) {
+            errors[error.path] = error.message;
+          }
+        });
+      }
       setStepErrors(errors);
       return false;
     }
   };
 
-  const handleNext = async (values: any) => {
+  const handleNext = async (values: Record<string, unknown>) => {
     if (currentStep === 1) {
       // Step 1 is just instructions, no validation needed
       setCurrentStep(currentStep + 1);
@@ -189,7 +191,7 @@ const RegisterPage = () => {
     setStepErrors({});
   }, [currentStep]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     setIsLoading(true);
     const finalData = { ...formData, ...values };
     
@@ -223,7 +225,7 @@ const RegisterPage = () => {
 
             {/* Simple Requirements */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md mx-auto">
-              <h4 className="font-medium text-blue-800 mb-3">What you'll need:</h4>
+              <h4 className="font-medium text-blue-800 mb-3">What you&apos;ll need:</h4>
               <ul className="text-sm text-blue-700 space-y-2 text-left">
                 <li>• NGO name and description</li>
                 <li>• Contact person details</li>
@@ -469,7 +471,7 @@ const RegisterPage = () => {
                       name="website"
                       placeholder="https://www.yourngo.org"
                       className="pl-10 h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      onChange={(e: any) => {
+                      onChange={() => {
                         // Clear any potential errors when user types
                         clearStepErrors('website');
                       }}
@@ -646,7 +648,7 @@ const RegisterPage = () => {
                 <h4 className="font-medium text-green-800 mb-2">What happens next?</h4>
                 <p className="text-sm text-green-700">
                   After registration, our team will verify your NGO within 24-48 hours. 
-                  You'll receive an email confirmation once approved.
+                  You&apos;ll receive an email confirmation once approved.
                 </p>
               </div>
             </div>
@@ -679,7 +681,7 @@ const RegisterPage = () => {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <div key={step.number} className="flex flex-col items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
                   currentStep >= step.number 
@@ -737,7 +739,7 @@ const RegisterPage = () => {
               validateOnBlur={true}
               validateOnMount={false}
             >
-              {({ isSubmitting, errors, touched, values, setFieldValue, validateForm }) => (
+              {({ isSubmitting, values }) => (
                 <Form className="space-y-6">
                   {renderStepContent(currentStep)}
 

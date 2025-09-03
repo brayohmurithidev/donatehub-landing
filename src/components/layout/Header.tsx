@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Heart, Menu, X, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import Image from "next/image";
 
 const Header = () => {

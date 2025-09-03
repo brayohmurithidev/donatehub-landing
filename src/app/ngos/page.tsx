@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import NGOCard from '@/components/cards/NGOCard';
-import { Search, Users, TrendingUp, MapPin, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useTenants } from "@/api/hooks/useTenants";
 
@@ -159,7 +159,7 @@ const NGOsPage = () => {
               ) : sortedNGOs.length > 0 ? (
                   <>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                      {sortedNGOs.map((ngo: any) => (
+                      {sortedNGOs.map((ngo) => (
                           <NGOCard key={ngo.id} ngo={ngo} />
                       ))}
                     </div>
@@ -201,7 +201,7 @@ const NGOsPage = () => {
                     </div>
                     <h3 className="text-2xl font-semibold text-gray-900 mb-4">No NGOs found</h3>
                     <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
-                      We couldn't find any NGOs matching your current filters. Try adjusting your search criteria or location.
+                      We couldn&apos;t find any NGOs matching your current filters. Try adjusting your search criteria or location.
                     </p>
                     <Button
                         variant="outline"
