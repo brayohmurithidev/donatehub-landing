@@ -1,5 +1,5 @@
 import Link from "next/link";
-import {Button} from "@/components/ui/button.tsx";
+import {Button} from "@/components/ui/button";
 import {Heart} from "lucide-react";
 
 

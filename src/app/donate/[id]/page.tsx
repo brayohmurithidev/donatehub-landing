@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import StripePaymentForm from '@/components/payment/StripePaymentForm';
+
 import { donationAmounts } from '@/data/dummy';
 import { 
   ArrowLeft, 
@@ -22,14 +22,12 @@ import {
   Smartphone,
   CheckCircle,
   AlertCircle,
-  Users,
   Target,
-  Globe,
   RefreshCw
 } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useGetCampaignById } from "@/api/hooks/useCampaigns";
-import { useCreateDonation, useProcessStripePayment, startPaymentStatusPolling, formatPhoneForMPESA } from "@/api/hooks/useDonation";
+import { useCreateDonation, formatPhoneForMPESA } from "@/api/hooks/useDonation";
 import API from "@/api/api";
 
 const DonationPage = () => {
@@ -58,7 +56,6 @@ const DonationPage = () => {
   
   // Donation hooks
   const createDonation = useCreateDonation();
-  const processStripePayment = useProcessStripePayment();
 
   // LocalStorage utility functions
   const getStoredDonationId = (campaignId: string): string | null => {
@@ -244,15 +241,15 @@ const DonationPage = () => {
     setDonorInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePaymentSuccess = (paymentIntent: { id: string; amount: number; status: string; created: number }) => {
-    console.log('Payment successful:', paymentIntent);
-    // Handle successful payment
-  };
-
-  const handlePaymentError = (error: string) => {
-    console.error('Payment failed:', error);
-    // Handle payment error
-  };
+  // const handlePaymentSuccess = (paymentIntent: { id: string; amount: number; status: string; created: number }) => {
+  //   console.log('Payment successful:', paymentIntent);
+  //   // Handle successful payment
+  // };
+  //
+  // const handlePaymentError = (error: string) => {
+  //   console.error('Payment failed:', error);
+  //   // Handle payment error
+  // };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -333,9 +330,14 @@ const DonationPage = () => {
         // Clear message after 5 seconds
         setTimeout(() => setDonationMessage(null), 5000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Donation failed:', error);
-      setDonationMessage({ type: 'error', message: error.response?.data?.detail || 'Donation failed. Please try again.' });
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : 'Donation failed. Please try again.';
+      setDonationMessage({ type: 'error', message: errorMessage });
       // Clear error message after 5 seconds
       setTimeout(() => setDonationMessage(null), 5000);
     }
@@ -554,7 +556,7 @@ const DonationPage = () => {
                                 console.log('Campaign donations response:', donationsResponse.data);
                                 
                                 // Find our donation by phone number
-                                const ourDonation = donationsResponse.data.find((d: any) => 
+                                const ourDonation = donationsResponse.data.find((d: { donor_phone: string; id: string; status: string }) => 
                                   d.donor_phone === donorInfo.phone || 
                                   d.donor_phone === formatPhoneForMPESA(donorInfo.phone)
                                 );

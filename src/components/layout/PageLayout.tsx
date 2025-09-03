@@ -2,7 +2,7 @@
 
 import Header from './Header';
 import Footer from './Footer';
-import CTASection from "@/components/layout/CTA.tsx";
+import CTASection from "@/components/layout/CTA";
 
 interface PageLayoutProps {
   children: React.ReactNode;

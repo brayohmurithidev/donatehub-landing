@@ -8,6 +8,7 @@ import CampaignCard from '@/components/cards/CampaignCard';
 import { Search, Target, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useCampaigns } from "@/api/hooks/useCampaigns";
+import { Campaign } from "@/types";
 
 const CampaignsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,30 +17,28 @@ const CampaignsPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('All');
 
   // Fetch campaigns from API
-  const { data: campaigns = [], isLoading, isFetching } = useCampaigns();
+  const { data: campaigns = [], isLoading } = useCampaigns();
 
   const categories = ['All Categories', 'Education', 'Healthcare', 'Environment', 'Emergency Relief', 'Social Welfare'];
   const sortOptions = ['Newest First', 'Oldest First', 'Most Funded', 'Least Funded', 'Ending Soon'];
   const filterOptions = ['All', 'Active', 'Urgent', 'Completed'];
 
-  const filteredCampaigns = campaigns.filter((campaign: any) => {
-    const matchesSearch = campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredCampaigns = campaigns.filter((campaign: Campaign) => {
+    const matchesSearch = campaign.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          campaign.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         campaign.tenant?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         campaign.category?.toLowerCase().includes(searchTerm.toLowerCase());
+                         campaign.tenant?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All Categories' || 
-                           campaign.category === selectedCategory;
+                           campaign.tenant?.name === selectedCategory;
     const matchesFilter = selectedFilter === 'All' || 
                          (selectedFilter === 'Active' && campaign.status === 'active') ||
-                         (selectedFilter === 'Urgent' && campaign.status === 'urgent') ||
                          (selectedFilter === 'Completed' && campaign.status === 'completed');
     
     return matchesSearch && matchesCategory && matchesFilter;
   });
 
-  const totalRaised = campaigns.reduce((sum: number, campaign: any) => sum + parseFloat(campaign.current_amount || '0'), 0);
-  const activeCampaigns = campaigns.filter((c: any) => c.status === 'active').length;
-  const urgentCampaigns = campaigns.filter((c: any) => c.status === 'urgent').length;
+  const totalRaised = campaigns.reduce((sum: number, campaign: Campaign) => sum + parseFloat(campaign.current_amount || '0'), 0);
+  const activeCampaigns = campaigns.filter((c: Campaign) => c.status === 'active').length;
+  const urgentCampaigns = campaigns.filter((c: Campaign) => c.status === 'active' && c.days_left && c.days_left <= 7).length;
 
   const stats = [
     { 
@@ -85,8 +84,8 @@ const CampaignsPage = () => {
                 
                 {/* Enhanced Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-2xl p-6 text-center shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
+                  {stats.map((stat) => (
+                    <div key={stat.label} className="bg-white rounded-2xl p-6 text-center shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
                       <div className="bg-primary/5 rounded-full p-3 w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/10 transition-colors duration-300">
                         <stat.icon className="h-8 w-8 text-primary group-hover:text-primary-dark transition-colors duration-300" />
                       </div>
@@ -190,9 +189,29 @@ const CampaignsPage = () => {
                 </div>
               ) : filteredCampaigns.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredCampaigns.map((campaign: any) => (
-                    <CampaignCard key={campaign.id} campaign={campaign} />
-                  ))}
+                  {filteredCampaigns.map((campaign: Campaign) => {
+                    // Transform our Campaign type to match CampaignCard's expected interface
+                    const transformedCampaign = {
+                      id: campaign.id,
+                      title: campaign.name,
+                      description: campaign.description,
+                      status: (campaign.status === 'completed' ? 'closed' : campaign.status === 'cancelled' ? 'closed' : 'active') as 'active' | 'closed' | 'urgent',
+                      goal_amount: campaign.goal_amount,
+                      current_amount: campaign.current_amount,
+                      start_date: campaign.start_date,
+                      end_date: campaign.end_date,
+                      image_url: campaign.image_url,
+                      percent_funded: campaign.percentage_funded || 0,
+                      days_left: campaign.days_left || 0,
+                      total_donors: campaign.total_donors || 0,
+                      tenant: {
+                        id: campaign.tenant.id,
+                        name: campaign.tenant.name,
+                        logo_url: campaign.tenant.logo_url
+                      }
+                    };
+                    return <CampaignCard key={campaign.id} campaign={transformedCampaign} />;
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-20">

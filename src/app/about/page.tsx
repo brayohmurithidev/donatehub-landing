@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Globe,
   CheckCircle,
-  Calendar
 } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 

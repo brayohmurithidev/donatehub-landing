@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import NGOCard from '@/components/cards/NGOCard';
 import CampaignCard from '@/components/cards/CampaignCard';
-import { dummyNGOs } from '@/data/dummy';
+
 import {
   Search,
   Heart,
@@ -22,6 +22,7 @@ import Image from 'next/image';
 import PageLayout from '@/components/layout/PageLayout';
 import {useCampaigns} from "@/api/hooks/useCampaigns";
 import {useTenants} from "@/api/hooks/useTenants";
+import { Campaign } from "@/types";
 
 const Landing = () => {
   const {data: featuredCampaigns, isLoading: fetchingCampaigns } = useCampaigns()
@@ -325,9 +326,29 @@ const Landing = () => {
                   ))}
                 </>
               ) : featuredCampaigns && featuredCampaigns.length > 0 ? (
-                featuredCampaigns.slice(0, 3).map((campaign: any) => (
-                  <CampaignCard key={campaign.id} campaign={campaign} />
-                ))
+                featuredCampaigns.slice(0, 3).map((campaign: Campaign) => {
+                  // Transform our Campaign type to match CampaignCard's expected interface
+                  const transformedCampaign = {
+                    id: campaign.id,
+                    title: campaign.name,
+                    description: campaign.description,
+                    status: (campaign.status === 'completed' ? 'closed' : campaign.status === 'cancelled' ? 'closed' : 'active') as 'active' | 'closed' | 'urgent',
+                    goal_amount: campaign.goal_amount,
+                    current_amount: campaign.current_amount,
+                    start_date: campaign.start_date,
+                    end_date: campaign.end_date,
+                    image_url: campaign.image_url,
+                    percent_funded: campaign.percentage_funded || 0,
+                    days_left: campaign.days_left || 0,
+                    total_donors: campaign.total_donors || 0,
+                    tenant: {
+                      id: campaign.tenant.id,
+                      name: campaign.tenant.name,
+                      logo_url: campaign.tenant.logo_url
+                    }
+                  };
+                  return <CampaignCard key={campaign.id} campaign={transformedCampaign} />;
+                })
               ) : (
                 <div className="col-span-full text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
