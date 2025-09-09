@@ -50,13 +50,13 @@ const Header = () => {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link href="/login">
+            <Link href={process.env.NEXT_PUBLIC_LOGIN_URL}>
               <Button variant="outline" size="sm" className="border-gray-300 text-gray-700 hover:bg-gray-50">
                 <User className="h-4 w-4 mr-2" />
                 Login
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href={process.env.NEXT_PUBLIC_REGISTER_URL}>
               <Button size="sm" className="hover:bg-primary-light cursor-pointer text-white border-0 shadow-sm">
                 Join as NGO
               </Button>
